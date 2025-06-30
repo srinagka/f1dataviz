@@ -87,81 +87,101 @@
             width: 100%;
             height: 100%;
             display: block;
-            background-color: #F9F9F7; /* Match body background */
+            background-color: transparent; /* Let container handle bg or make it explicit if needed */
+            overflow: visible; /* Important for elements like annotations that might go slightly out */
         }
 
         .axis path,
         .axis line {
             fill: none;
-            stroke: #777; /* Grayscale for axes */
+            stroke: #adb5bd; /* Lighter gray for axes */
             stroke-width: 1px;
             shape-rendering: crispEdges;
         }
 
         .axis text {
             font-family: 'Roboto', sans-serif;
-            font-size: 0.75em; /* Slightly smaller for modern look */
-            fill: #555; /* Darker gray */
+            font-size: 0.78em;
+            fill: #495057;
         }
 
         .grid line {
-            stroke: #000; /* Grid color - changed from #111 to #000 as #111 is body text */
-            stroke-opacity: 0.1; /* Slightly more subtle */
+            stroke: #dee2e6; /* Very light grid lines */
+            stroke-opacity: 0.6;
             shape-rendering: crispEdges;
         }
 
         .chart-title {
             font-family: 'Poppins', sans-serif;
             font-weight: 600;
-            font-size: 1.0em; /* Adjusted size */
-            fill: #333;
+            font-size: 1.05em;
+            fill: #343a40; /* Darker title */
             text-anchor: middle;
         }
 
-        /* Chart-specific styles will be added later */
+        /* Chart-specific styles */
         .line-champion-age {
             fill: none;
-            stroke: #1C4E80; /* Primary color */
-            stroke-width: 2px;
+            stroke: #1C4E80;
+            stroke-width: 2.5px; /* Slightly thicker line */
+            transition: stroke-width 0.2s ease-in-out;
         }
 
         .regression-line {
             fill: none;
-            stroke: #D55E00; /* Secondary color */
-            stroke-width: 1.5px;
-            stroke-dasharray: 4, 4;
+            stroke: #D55E00;
+            stroke-width: 2px; /* Slightly thicker */
+            stroke-dasharray: 5, 5; /* Adjusted dash */
         }
 
         .bar-constructor {
-            /* fill will be set dynamically */
-            stroke: #111;
-            stroke-width: 0.5px;
+            stroke: none; /* Remove stroke for cleaner bars */
+            transition: opacity 0.2s ease-in-out, filter 0.2s ease-in-out;
+        }
+        .bar-constructor:hover {
+            filter: brightness(1.15); /* Brighter on hover */
         }
 
+
         .area-nationality {
-            /* fill will be set dynamically */
             stroke-width: 0.5px;
-            stroke: #111;
+            stroke: #fff; /* White stroke for separation */
+            stroke-opacity: 0.5;
+            transition: opacity 0.2s ease-in-out, filter 0.2s ease-in-out;
         }
+         .area-nationality:hover {
+            filter: brightness(1.1);
+        }
+
+        .hover-circle { /* For champion age chart */
+             transition: r 0.2s ease-in-out, fill 0.2s ease-in-out;
+        }
+
+
         .highlight {
             /* Define highlight style, e.g., increased stroke-width or opacity */
         }
 
         .tooltip {
             position: absolute;
-            text-align: center;
-            padding: 8px 12px;
+            text-align: left; /* Better for multi-line tooltips */
+            padding: 10px 15px; /* More padding */
             font-family: 'Roboto', sans-serif;
-            font-size: 0.85em;
-            background: #333; /* Dark background for tooltip */
-            color: #fff;
+            font-size: 0.9em; /* Slightly larger tooltip text */
+            background: rgba(30, 30, 30, 0.95); /* Dark, slightly transparent */
+            color: #f8f9fa; /* Light text */
             border: 0px;
-            border-radius: 6px; /* Rounded corners */
-            pointer-events: none; /* So it doesn't interfere with mouse events on chart elements */
+            border-radius: 8px;
+            pointer-events: none;
             opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 10; /* Ensure tooltip is on top */
+            transition: opacity 0.2s ease-in-out, transform 0.15s ease-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10;
+            max-width: 250px; /* Prevent overly wide tooltips */
+        }
+        .tooltip strong {
+            color: #fff; /* Ensure strong tag is bright */
+            font-weight: 700;
         }
 
     </style>
@@ -177,7 +197,6 @@
             <div class="chart-container" id="chart-container-1">
                 <svg id="chart1" role="img" aria-labelledby="chart1-title">
                     <title id="chart1-title">Average Age of Formula One Champions Over Time</title>
-                    <!-- Chart 1 will be rendered here -->
                 </svg>
             </div>
             <div class="step" data-chart="1" data-step-id="championAgeIntro">
@@ -191,7 +210,6 @@
             <div class="chart-container" id="chart-container-2">
                 <svg id="chart2" role="img" aria-labelledby="chart2-title">
                     <title id="chart2-title">Constructor Title Streaks in Formula One</title>
-                    <!-- Chart 2 will be rendered here -->
                 </svg>
             </div>
             <div class="step" data-chart="2" data-step-id="constructorStreaksIntro">
@@ -202,11 +220,9 @@
                 <p>Notice how some teams managed to maintain their competitive edge for multiple consecutive years, shaping the sport's history.</p>
             </div>
 
-
             <div class="chart-container" id="chart-container-3">
                 <svg id="chart3" role="img" aria-labelledby="chart3-title">
                     <title id="chart3-title">Driver Nationality Wins Per Decade</title>
-                    <!-- Chart 3 will be rendered here -->
                 </svg>
             </div>
             <div class="step" data-chart="3" data-step-id="nationalityWinsIntro">
@@ -224,8 +240,7 @@
     </div>
 
     <script>
-        // CSV Data will be embedded here in the next step
-        const championAgeCsvData = `year,avgChampionAge
+        const championAgeCsvData = \`year,avgChampionAge
 1950,40
 1951,40
 1952,36
@@ -299,9 +314,9 @@
 2020,35
 2021,24
 2022,25
-2023,26`;
+2023,26\`;
 
-        const constructorStreaksCsvData = `team,startYear,endYear,length
+        const constructorStreaksCsvData = \`team,startYear,endYear,length
 Ferrari,1952,1953,2
 Mercedes,1954,1955,2
 Cooper,1959,1960,2
@@ -335,9 +350,9 @@ Ferrari,2007,2008,2
 Brawn GP,2009,2009,1
 Red Bull,2010,2013,4
 Mercedes,2014,2021,8
-Red Bull,2022,2023,2`;
+Red Bull,2022,2023,2\`;
 
-        const nationalityWinsCsvData = `decade,nationality,wins
+        const nationalityWinsCsvData = \`decade,nationality,wins
 1950,Argentine,18
 1950,Italian,14
 1950,American,3
@@ -376,45 +391,29 @@ Red Bull,2022,2023,2`;
 2020,British,20
 2020,Mexican,4
 2020,French,3
-2020,Finnish,2`;
-
-        // D3 code for charts and interactions will go here
-
-        // --- Data Loading and Preprocessing ---
+2020,Finnish,2\`;
 
         function parseAndCleanData() {
-            // --- Champion Age Data ---
             let championAgeData = d3.csvParse(championAgeCsvData, d => ({
                 year: +d.year,
                 avgChampionAge: +d.avgChampionAge
             }));
-
-            // Outlier removal for championAgeData.avgChampionAge
             championAgeData = removeOutliers(championAgeData, 'avgChampionAge');
 
-            // --- Constructor Streaks Data ---
             let constructorStreaksData = d3.csvParse(constructorStreaksCsvData, d => ({
                 team: d.team,
                 startYear: +d.startYear,
                 endYear: +d.endYear,
                 length: +d.length
             }));
-            // No numeric series specified for outlier removal in spec for streaks, length is derived.
-            // Assuming 'length' might be a candidate if it were independent.
-            // constructorStreaksData = removeOutliers(constructorStreaksData, 'length');
 
-
-            // --- Nationality Wins Data ---
             let nationalityWinsData = d3.csvParse(nationalityWinsCsvData, d => ({
                 decade: +d.decade,
                 nationality: d.nationality,
                 wins: +d.wins
             }));
-
-            // Outlier removal for nationalityWinsData.wins
             nationalityWinsData = removeOutliers(nationalityWinsData, 'wins');
 
-            // Identify top 5 nationalities overall to filter for the chart
             const totalWinsByNationality = d3.rollup(nationalityWinsData, v => d3.sum(v, d => d.wins), d => d.nationality);
             const top5Nationalities = Array.from(totalWinsByNationality.entries())
                                           .sort((a, b) => b[1] - a[1])
@@ -422,7 +421,6 @@ Red Bull,2022,2023,2`;
                                           .map(d => d[0]);
 
             const filteredNationalityWinsData = nationalityWinsData.filter(d => top5Nationalities.includes(d.nationality));
-
 
             return { championAgeData, constructorStreaksData, filteredNationalityWinsData, top5Nationalities };
         }
@@ -435,32 +433,44 @@ Red Bull,2022,2023,2`;
             const iqr = q3 - q1;
             const lowerBound = q1 - 1.5 * iqr;
             const upperBound = q3 + 1.5 * iqr;
-
             return data.filter(d => d[columnName] >= lowerBound && d[columnName] <= upperBound);
         }
 
-        let processedData; // To store the results of parseAndCleanData
+        let processedData;
 
         document.addEventListener('DOMContentLoaded', () => {
             processedData = parseAndCleanData();
             console.log("Processed Data:", processedData);
 
-            initChampionAgeChart(); // Initialize chart 1
-            initConstructorStreaksChart(); // Initialize chart 2
-            initNationalityWinsChart(); // Initialize chart 3
+            try {
+                initChampionAgeChart();
+            } catch (e) {
+                console.error("Error initializing Champion Age Chart:", e);
+            }
+            try {
+                initConstructorStreaksChart();
+            } catch (e) {
+                console.error("Error initializing Constructor Streaks Chart:", e);
+            }
+            try {
+                initNationalityWinsChart();
+            } catch (e) {
+                console.error("Error initializing Nationality Wins Chart:", e);
+            }
 
-            initScrollytelling(); // Initialize Intersection Observer interactions
+            try {
+                initScrollytelling();
+            } catch (e) {
+                console.error("Error initializing Scrollytelling:", e);
+            }
 
-            // Final size check
             console.log('Size KB:',(new Blob([document.documentElement.outerHTML]).size/1024).toFixed(1));
         });
 
-        // --- Tooltip ---
         const tooltip = d3.select("body").append("div")
             .attr("class", "tooltip")
             .style("opacity", 0);
 
-        // --- Chart 1: Champion Age ---
         function initChampionAgeChart() {
             const data = processedData.championAgeData;
             if (!data || data.length === 0) {
@@ -474,9 +484,8 @@ Red Bull,2022,2023,2`;
             const height = 400 - margin.top - margin.bottom;
 
             const chartG = svg.append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+                .attr("transform", \`translate(\${margin.left},\${margin.top})\`);
 
-            // Add chart title
             svg.append("text")
                 .attr("class", "chart-title")
                 .attr("x", (width + margin.left + margin.right) / 2)
@@ -484,240 +493,124 @@ Red Bull,2022,2023,2`;
                 .attr("text-anchor", "middle")
                 .text("Average Age of F1 Champions (1950-2023)");
 
-            // Scales
-            const x = d3.scaleLinear()
-                .domain(d3.extent(data, d => d.year))
-                .range([0, width]);
+            const x = d3.scaleLinear().domain(d3.extent(data, d => d.year)).range([0, width]);
+            const y = d3.scaleLinear().domain([0, d3.max(data, d => d.avgChampionAge) * 1.1]).range([height, 0]);
 
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(data, d => d.avgChampionAge) * 1.1]) // Add some padding to max age
-                .range([height, 0]);
-
-            // Axes
             const xAxis = d3.axisBottom(x).tickFormat(d3.format("d")).ticks(10);
             const yAxis = d3.axisLeft(y);
 
-            chartG.append("g")
-                .attr("class", "axis x-axis")
-                .attr("transform", `translate(0,${height})`)
-                .call(xAxis);
+            chartG.append("g").attr("class", "axis x-axis").attr("transform", \`translate(0,\${height})\`).call(xAxis);
+            chartG.append("g").attr("class", "axis y-axis").call(yAxis);
 
-            chartG.append("g")
-                .attr("class", "axis y-axis")
-                .call(yAxis);
+            chartG.append("g").attr("class", "grid").call(d3.axisLeft(y).ticks(5).tickSize(-width).tickFormat(""));
 
-            // Gridlines
-            chartG.append("g")
-                .attr("class", "grid")
-                .call(d3.axisLeft(y)
-                    .ticks(5)
-                    .tickSize(-width)
-                    .tickFormat("")
-                );
+            const line = d3.line().x(d => x(d.year)).y(d => y(d.avgChampionAge));
 
-            // Line generator
-            const line = d3.line()
-                .x(d => x(d.year))
-                .y(d => y(d.avgChampionAge));
-
-            // Draw the line
-            chartG.append("path")
+            const mainLine = chartG.append("path") // Storing mainLine reference earlier
                 .datum(data)
-                .attr("class", "line-champion-age data-line") // Added data-line class for potential highlighting
+                .attr("class", "line-champion-age data-line")
                 .attr("d", line)
                 .attr("aria-label", "Line showing average champion age per year");
 
-            // Circles for hover interaction
-            const hoverCircles = chartG.selectAll(".hover-circle")
+            chartG.selectAll(".hover-circle")
                 .data(data)
                 .enter().append("circle")
                 .attr("class", "hover-circle")
                 .attr("cx", d => x(d.year))
                 .attr("cy", d => y(d.avgChampionAge))
-                .attr("r", 5) // Radius of hoverable invisible circle
-                .style("fill", "transparent") // Make them invisible
-                .style("pointer-events", "all") // Ensure they capture mouse events
+                .attr("r", 5)
+                .style("fill", "transparent")
+                .style("pointer-events", "all")
                 .on("mouseover", function(event, d) {
                     tooltip.transition().duration(200).style("opacity", .9);
-                    tooltip.html(`<strong>Year:</strong> ${d.year}<br/><strong>Avg Age:</strong> ${d.avgChampionAge.toFixed(1)}`)
+                    tooltip.html(\`<strong>Year:</strong> \${d.year}<br/><strong>Avg Age:</strong> \${d.avgChampionAge.toFixed(1)}\`)
                         .style("left", (event.pageX + 15) + "px")
                         .style("top", (event.pageY - 28) + "px");
-
-                    // Highlight the actual data point or line segment
-                    d3.select(this).attr("r", 7).style("fill", "#D55E00"); // Show circle on hover
+                    d3.select(this).attr("r", 7).style("fill", "#D55E00");
                     mainLine.style("stroke-width", "3px");
                 })
                 .on("mouseout", function(d) {
                     tooltip.transition().duration(500).style("opacity", 0);
-                    d3.select(this).attr("r", 5).style("fill", "transparent"); // Hide circle
+                    d3.select(this).attr("r", 5).style("fill", "transparent");
                     mainLine.style("stroke-width", "2px");
                 });
 
-            const mainLine = chartG.select(".line-champion-age"); // Reference to the main line for hover effect
-
-
-            // Regression Line Calculation
             const xMean = d3.mean(data, d => d.year);
             const yMean = d3.mean(data, d => d.avgChampionAge);
             const numerator = d3.sum(data, d => (d.year - xMean) * (d.avgChampionAge - yMean));
             const denominator = d3.sum(data, d => Math.pow(d.year - xMean, 2));
             const slope = numerator / denominator;
             const intercept = yMean - slope * xMean;
+            const regressionPoints = data.map(d => ({ year: d.year, avgChampionAge: slope * d.year + intercept }));
 
-            const regressionPoints = data.map(d => ({
-                year: d.year,
-                avgChampionAge: slope * d.year + intercept
-            }));
-
-            // Draw the regression line
-            chartG.append("path")
-                .datum(regressionPoints)
-                .attr("class", "regression-line")
-                .attr("d", line) // Re-use the line generator with new data
+            chartG.append("path").datum(regressionPoints).attr("class", "regression-line").attr("d", line)
                 .attr("aria-label", "Regression line showing trend of average champion age");
 
-            // Annotation example (can be expanded based on scrollytelling interaction)
-            // For now, let's highlight the youngest and oldest average ages
             const youngest = data.reduce((min, p) => p.avgChampionAge < min.avgChampionAge ? p : min, data[0]);
             const oldest = data.reduce((max, p) => p.avgChampionAge > max.avgChampionAge ? p : max, data[0]);
-
-            const annotations = [
-                { year: youngest.year, age: youngest.avgChampionAge, label: `Youngest Avg: ${youngest.avgChampionAge} (${youngest.year})` },
-                { year: oldest.year, age: oldest.avgChampionAge, label: `Oldest Avg: ${oldest.avgChampionAge} (${oldest.year})` }
+            const annotationsData = [
+                { year: youngest.year, age: youngest.avgChampionAge, label: \`Youngest Avg: \${youngest.avgChampionAge} (\${youngest.year})\` },
+                { year: oldest.year, age: oldest.avgChampionAge, label: \`Oldest Avg: \${oldest.avgChampionAge} (\${oldest.year})\` }
             ];
 
             const annotationGroup = chartG.append("g").attr("class", "annotations");
-
-            annotations.forEach(ann => {
+            annotationsData.forEach(ann => {
                 const annX = x(ann.year);
                 const annY = y(ann.age);
-
-                annotationGroup.append("circle")
-                    .attr("cx", annX)
-                    .attr("cy", annY)
-                    .attr("r", 4)
-                    .attr("fill", "#0072B2");
-
-                annotationGroup.append("text")
-                    .attr("x", annX + 5)
-                    .attr("y", annY - 5)
-                    .text(ann.label)
-                    .attr("font-size", "0.7em")
-                    .attr("fill", "#0072B2");
+                annotationGroup.append("circle").attr("cx", annX).attr("cy", annY).attr("r", 4).attr("fill", "#0072B2");
+                annotationGroup.append("text").attr("x", annX + 5).attr("y", annY - 5).text(ann.label).attr("font-size", "0.7em").attr("fill", "#0072B2");
             });
 
-            // Store elements for scrollytelling updates
             svg.node()._chartUpdate = (stepId) => {
-                chartG.selectAll(".data-line").classed("highlight", stepId === "championAgeIntro" || stepId === "championAgeRegression");
+                mainLine.classed("highlight", stepId === "championAgeIntro" || stepId === "championAgeRegression");
                 chartG.selectAll(".regression-line").style("opacity", stepId === "championAgeRegression" ? 1 : 0.3);
                 annotationGroup.style("opacity", (stepId === "championAgeIntro" || stepId === "championAgeRegression") ? 1 : 0.3);
             };
         }
 
-        // --- Chart 2: Constructor Streaks ---
         function initConstructorStreaksChart() {
             const data = processedData.constructorStreaksData;
-            if (!data || data.length === 0) {
-                console.warn("Constructor streaks data is empty or undefined. Skipping chart rendering.");
-                return;
-            }
-            // Sort data by start year for timeline consistency
+            if (!data || data.length === 0) { return; }
             data.sort((a, b) => a.startYear - b.startYear || a.length - b.length);
 
-
             const svg = d3.select("#chart2");
-            const margin = {top: 40, right: 30, bottom: 50, left: 100}; // Increased left margin for team names
+            const margin = {top: 40, right: 30, bottom: 50, left: 100};
             const width = 600 - margin.left - margin.right;
             const height = 400 - margin.top - margin.bottom;
+            const chartG = svg.append("g").attr("transform", \`translate(\${margin.left},\${margin.top})\`);
 
-            const chartG = svg.append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+            svg.append("text").attr("class", "chart-title").attr("x", (width + margin.left + margin.right) / 2).attr("y", margin.top / 2 + 5).attr("text-anchor", "middle").text("Constructor Championship Streaks (Min 1 Year)");
 
-            svg.append("text")
-                .attr("class", "chart-title")
-                .attr("x", (width + margin.left + margin.right) / 2)
-                .attr("y", margin.top / 2 + 5)
-                .attr("text-anchor", "middle")
-                .text("Constructor Championship Streaks (Min 1 Year)");
-
-            // Scales
-            const y = d3.scaleBand()
-                .domain(data.map(d => d.team + "_" + d.startYear)) // Unique key for each streak
-                .range([0, height])
-                .padding(0.2);
-
-            const x = d3.scaleLinear()
-                .domain([d3.min(data, d => d.startYear) -1 , d3.max(data, d => d.endYear) + 1])
-                .range([0, width]);
+            const y = d3.scaleBand().domain(data.map(d => d.team + "_" + d.startYear)).range([0, height]).padding(0.2);
+            const x = d3.scaleLinear().domain([d3.min(data, d => d.startYear) -1 , d3.max(data, d => d.endYear) + 1]).range([0, width]);
 
             const colorPalette = ["#1C4E80", "#D55E00", "#0072B2", "#E69F00", "#A0A0A0", "#505050"];
             const teamColors = {};
             let colorIndex = 0;
             data.forEach(d => {
-                if (!teamColors[d.team]) {
-                    teamColors[d.team] = colorPalette[colorIndex % colorPalette.length];
-                    colorIndex++;
-                }
+                if (!teamColors[d.team]) { teamColors[d.team] = colorPalette[colorIndex++ % colorPalette.length]; }
             });
 
-            // Axes
             const xAxis = d3.axisBottom(x).tickFormat(d3.format("d")).ticks(Math.min(10, (x.domain()[1]-x.domain()[0])));
-            const yAxis = d3.axisLeft(y)
-                .tickFormat(val => {
-                    const [team, year] = val.split("_");
-                    return team; // Only show team name, avoid clutter
-                })
-                .tickSize(0) // No ticks, direct labels
-                .tickPadding(10);
+            const yAxis = d3.axisLeft(y).tickFormat(val => val.split("_")[0]).tickSize(0).tickPadding(10);
 
-
-            chartG.append("g")
-                .attr("class", "axis x-axis")
-                .attr("transform", `translate(0,${height})`)
-                .call(xAxis);
-
-            const yAxisGroup = chartG.append("g")
-                .attr("class", "axis y-axis")
-                .call(yAxis);
-
-            // Remove domain line from y-axis for cleaner look
+            chartG.append("g").attr("class", "axis x-axis").attr("transform", \`translate(0,\${height})\`).call(xAxis);
+            const yAxisGroup = chartG.append("g").attr("class", "axis y-axis").call(yAxis);
             yAxisGroup.select(".domain").remove();
-            yAxisGroup.selectAll(".tick text")
-                .attr("fill", d => {
-                     const team = d.split("_")[0];
-                     return teamColors[team] || "#111";
-                });
+            yAxisGroup.selectAll(".tick text").attr("fill", d => teamColors[d.split("_")[0]] || "#111");
 
+            chartG.append("g").attr("class", "grid").attr("transform", \`translate(0,\${height})\`).call(d3.axisBottom(x).ticks(Math.min(10, (x.domain()[1]-x.domain()[0]))).tickSize(-height).tickFormat(""));
 
-            // Gridlines for X-axis
-            chartG.append("g")
-                .attr("class", "grid")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x)
-                    .ticks(Math.min(10, (x.domain()[1]-x.domain()[0])))
-                    .tickSize(-height)
-                    .tickFormat("")
-                );
-
-            // Bars
-            const bars = chartG.selectAll(".bar-constructor")
-                .data(data)
-                .enter()
-                .append("rect")
-                .attr("class", d => `bar-constructor team-${d.team.replace(/\s+/g, '-').toLowerCase()}`)
-                .attr("y", d => y(d.team + "_" + d.startYear))
-                .attr("x", d => x(d.startYear))
-                .attr("width", d => x(d.endYear + 1) - x(d.startYear)) // +1 to include end year fully
-                .attr("height", y.bandwidth())
+            const bars = chartG.selectAll(".bar-constructor").data(data).enter().append("rect")
+                .attr("class", d => \`bar-constructor team-\${d.team.replace(/\s+/g, '-').toLowerCase()}\`)
+                .attr("y", d => y(d.team + "_" + d.startYear)).attr("x", d => x(d.startYear))
+                .attr("width", d => x(d.endYear + 1) - x(d.startYear)).attr("height", y.bandwidth())
                 .attr("fill", d => teamColors[d.team] || "#777")
-                .attr("aria-label", d => `${d.team} championship streak from ${d.startYear} to ${d.endYear}, ${d.length} years.`)
+                .attr("aria-label", d => \`\${d.team} championship streak from \${d.startYear} to \${d.endYear}, \${d.length} years.\`)
                 .on("mouseover", function(event, d) {
                     tooltip.transition().duration(200).style("opacity", .9);
-                    tooltip.html(`<strong>Team:</strong> ${d.team}<br/>
-                                  <strong>Streak:</strong> ${d.startYear} - ${d.endYear}<br/>
-                                  <strong>Length:</strong> ${d.length} year(s)`)
-                        .style("left", (event.pageX + 15) + "px")
-                        .style("top", (event.pageY - 28) + "px");
+                    tooltip.html(\`<strong>Team:</strong> \${d.team}<br/><strong>Streak:</strong> \${d.startYear} - \${d.endYear}<br/><strong>Length:</strong> \${d.length} year(s)\`)
+                        .style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 28) + "px");
                     d3.select(this).style("opacity", 0.7);
                 })
                 .on("mouseout", function(d) {
@@ -725,52 +618,24 @@ Red Bull,2022,2023,2`;
                     d3.select(this).style("opacity", 1);
                 });
 
-
-            // Direct labels on bars (streak length)
-            chartG.selectAll(".bar-label")
-                .data(data)
-                .enter()
-                .append("text")
-                .attr("class", "bar-label")
+            chartG.selectAll(".bar-label").data(data).enter().append("text").attr("class", "bar-label")
                 .attr("x", d => x(d.startYear) + (x(d.endYear + 1) - x(d.startYear)) / 2)
                 .attr("y", d => y(d.team + "_" + d.startYear) + y.bandwidth() / 2)
-                .attr("dy", "0.35em")
-                .attr("text-anchor", "middle")
-                .text(d => d.length)
-                .attr("fill", "#FFF") // White text for contrast on dark bars
-                .style("font-size", "0.7em")
-                .style("pointer-events", "none"); // So text doesn't interfere with bar events
+                .attr("dy", "0.35em").attr("text-anchor", "middle").text(d => d.length)
+                .attr("fill", "#FFF").style("font-size", "0.7em").style("pointer-events", "none");
 
-            // Store elements for scrollytelling updates
             svg.node()._chartUpdate = (stepId) => {
-                const highlightTeam = stepId === "constructorHighlight" ? "Mercedes" : null; // Example, could be dynamic
-
-                bars.transition().duration(300)
-                    .attr("opacity", d => {
-                        if (!highlightTeam) return 1;
-                        return d.team === highlightTeam ? 1 : 0.3;
-                    });
-                 yAxisGroup.selectAll(".tick text")
-                    .transition().duration(300)
-                    .attr("opacity", d => {
-                         if (!highlightTeam) return 1;
-                         const team = d.split("_")[0];
-                         return team === highlightTeam ? 1 : 0.3;
-                    });
+                const highlightTeam = stepId === "constructorHighlight" ? "Mercedes" : null;
+                bars.transition().duration(300).attr("opacity", d => !highlightTeam || d.team === highlightTeam ? 1 : 0.3);
+                yAxisGroup.selectAll(".tick text").transition().duration(300).attr("opacity", d => !highlightTeam || d.split("_")[0] === highlightTeam ? 1 : 0.3);
             };
         }
 
-        // --- Chart 3: Nationality Wins (Stacked Area) ---
         function initNationalityWinsChart() {
             const rawData = processedData.filteredNationalityWinsData;
             const topNationalities = processedData.top5Nationalities;
+            if (!rawData || rawData.length === 0 || !topNationalities || topNationalities.length === 0) { return; }
 
-            if (!rawData || rawData.length === 0 || !topNationalities || topNationalities.length === 0) {
-                console.warn("Nationality wins data or top nationalities are empty. Skipping chart rendering.");
-                return;
-            }
-
-            // Transform data for stacking: group by decade, then sum wins for each of the top 5 nationalities
             const decades = Array.from(new Set(rawData.map(d => d.decade))).sort(d3.ascending);
             const dataForStacking = decades.map(decade => {
                 const entry = { decade: decade };
@@ -788,81 +653,33 @@ Red Bull,2022,2023,2`;
             const margin = {top: 40, right: 30, bottom: 50, left: 50};
             const width = 600 - margin.left - margin.right;
             const height = 400 - margin.top - margin.bottom;
+            const chartG = svg.append("g").attr("transform", \`translate(\${margin.left},\${margin.top})\`);
 
-            const chartG = svg.append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+            svg.append("text").attr("class", "chart-title").attr("x", (width + margin.left + margin.right) / 2).attr("y", margin.top / 2 + 5).attr("text-anchor", "middle").text("Wins by Top 5 Nationalities per Decade");
 
-            svg.append("text")
-                .attr("class", "chart-title")
-                .attr("x", (width + margin.left + margin.right) / 2)
-                .attr("y", margin.top / 2 + 5)
-                .attr("text-anchor", "middle")
-                .text("Wins by Top 5 Nationalities per Decade");
+            const x = d3.scalePoint().domain(decades).range([0, width]).padding(0.5);
+            const y = d3.scaleLinear().domain([0, d3.max(series, s => d3.max(s, d => d[1]))]).range([height, 0]);
+            const colorPalette = ["#1C4E80", "#D55E00", "#0072B2", "#E69F00", "#785EF0"];
+            const color = d3.scaleOrdinal().domain(topNationalities).range(colorPalette);
 
-            // Scales
-            const x = d3.scalePoint() // Using scalePoint for discrete decades
-                .domain(decades)
-                .range([0, width])
-                .padding(0.5);
-
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(series, s => d3.max(s, d => d[1]))]) // Max of the stacked values
-                .range([height, 0]);
-
-            const colorPalette = ["#1C4E80", "#D55E00", "#0072B2", "#E69F00", "#785EF0"]; // Adjusted palette
-            const color = d3.scaleOrdinal()
-                .domain(topNationalities)
-                .range(colorPalette);
-
-            // Axes
-            const xAxis = d3.axisBottom(x).tickFormat(d => d + "s"); // e.g., 1950s
+            const xAxis = d3.axisBottom(x).tickFormat(d => d + "s");
             const yAxis = d3.axisLeft(y);
+            chartG.append("g").attr("class", "axis x-axis").attr("transform", \`translate(0,\${height})\`).call(xAxis);
+            chartG.append("g").attr("class", "axis y-axis").call(yAxis);
+            chartG.append("g").attr("class", "grid").call(d3.axisLeft(y).ticks(5).tickSize(-width).tickFormat(""));
 
-            chartG.append("g")
-                .attr("class", "axis x-axis")
-                .attr("transform", `translate(0,${height})`)
-                .call(xAxis);
+            const area = d3.area().x(d => x(d.data.decade)).y0(d => y(d[0])).y1(d => y(d[1]));
 
-            chartG.append("g")
-                .attr("class", "axis y-axis")
-                .call(yAxis);
-
-            // Gridlines for Y-axis
-             chartG.append("g")
-                .attr("class", "grid")
-                .call(d3.axisLeft(y)
-                    .ticks(5)
-                    .tickSize(-width)
-                    .tickFormat("")
-                );
-
-            // Area generator
-            const area = d3.area()
-                .x(d => x(d.data.decade))
-                .y0(d => y(d[0]))
-                .y1(d => y(d[1]));
-
-            // Draw areas
-            const areas = chartG.selectAll(".area-nationality")
-                .data(series)
-                .enter().append("path")
-                .attr("class", d => `area-nationality nationality-${d.key.replace(/\s+/g, '-').toLowerCase()}`)
-                .attr("d", area)
-                .style("fill", d => color(d.key))
-                .attr("aria-label", d => `Area showing wins for ${d.key} drivers per decade.`)
-                .on("mouseover", function(event, d_series) { // d_series is the whole series for a nationality
+            const areas = chartG.selectAll(".area-nationality").data(series).enter().append("path")
+                .attr("class", d => \`area-nationality nationality-\${d.key.replace(/\s+/g, '-').toLowerCase()}\`)
+                .attr("d", area).style("fill", d => color(d.key))
+                .attr("aria-label", d => \`Area showing wins for \${d.key} drivers per decade.\`)
+                .on("mouseover", function(event, d_series) {
                     const key = d_series.key;
                     tooltip.transition().duration(200).style("opacity", .9);
-                    // Tooltip content might be tricky here as we hover an area, not a point.
-                    // For simplicity, show nationality. More complex would find closest point.
-                    tooltip.html(`<strong>Nationality:</strong> ${key}`)
-                        .style("left", (event.pageX + 15) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-
+                    tooltip.html(\`<strong>Nationality:</strong> \${key}\`).style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 28) + "px");
                     areas.style("opacity", other_d => other_d.key === key ? 1 : 0.3);
-                    // Highlight corresponding legend item
                     legend.selectAll("g").style("opacity", leg_d => leg_d === key ? 1 : 0.5);
-
                 })
                 .on("mouseout", function(d) {
                     tooltip.transition().duration(500).style("opacity", 0);
@@ -870,21 +687,12 @@ Red Bull,2022,2023,2`;
                     legend.selectAll("g").style("opacity", 1);
                 });
 
-            // Legend
-            const legend = chartG.append("g")
-                .attr("class", "legend")
-                .attr("transform", `translate(${width - 100}, 0)`); // Position legend
-
+            const legend = chartG.append("g").attr("class", "legend").attr("transform", \`translate(\${width - 100}, 0)\`);
             topNationalities.forEach((nationality, i) => {
-                const legendRow = legend.append("g")
-                    .datum(nationality) // Bind nationality name to the legend group
-                    .attr("transform", `translate(0, ${i * 20})`)
-                    .style("cursor", "default") // Indicate interactivity
+                const legendRow = legend.append("g").datum(nationality).attr("transform", \`translate(0, \${i * 20})\`).style("cursor", "default")
                     .on("mouseover", function(event, d_nationality) {
                         tooltip.transition().duration(200).style("opacity", .9);
-                        tooltip.html(`<strong>Nationality:</strong> ${d_nationality}`)
-                           .style("left", (event.pageX + 15) + "px")
-                           .style("top", (event.pageY - 28) + "px");
+                        tooltip.html(\`<strong>Nationality:</strong> \${d_nationality}\`).style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 28) + "px");
                         areas.style("opacity", area_d => area_d.key === d_nationality ? 1 : 0.3);
                         legend.selectAll("g").style("opacity", leg_d => leg_d === d_nationality ? 1 : 0.5);
                     })
@@ -893,104 +701,50 @@ Red Bull,2022,2023,2`;
                         areas.style("opacity", 1);
                         legend.selectAll("g").style("opacity", 1);
                     });
-
-
-                legendRow.append("rect")
-                    .attr("width", 10)
-                    .attr("height", 10)
-                    .attr("fill", color(nationality));
-
-                legendRow.append("text")
-                    .attr("x", 15)
-                    .attr("y", 10)
-                    .text(nationality)
-                    .style("font-size", "0.7em")
-                    .attr("alignment-baseline", "middle");
+                legendRow.append("rect").attr("width", 10).attr("height", 10).attr("fill", color(nationality));
+                legendRow.append("text").attr("x", 15).attr("y", 10).text(nationality).style("font-size", "0.7em").attr("alignment-baseline", "middle");
             });
 
-            // Store elements for scrollytelling updates
             svg.node()._chartUpdate = (stepId) => {
-                const highlightNationality = stepId === "nationalityFocus" ? topNationalities[0] : null; // Example: highlight first nationality
-
-                areas.transition().duration(300)
-                    .style("opacity", d => {
-                        if (!highlightNationality) return 1;
-                        return d.key === highlightNationality ? 1 : 0.3;
-                    });
-
-                legend.selectAll("g")
-                    .transition().duration(300)
-                    .style("opacity", d => { // d is undefined here, need to select text/rect to get data
-                         const textNode = d3.select(this).select("text"); // 'this' context issue
-                         if (textNode.empty()) return 0.3; // Should not happen if selection is correct
-                         const nationality = textNode.text();
-                         if (!highlightNationality) return 1;
-                         return nationality === highlightNationality ? 1 : 0.3;
-                    });
-                 // Corrected legend highlighting:
-                legend.selectAll("g").each(function(legendData, i) { // Use .each to get current data context
-                    const nationality = topNationalities[i]; // Assuming legend items are in the same order
-                    d3.select(this).transition().duration(300)
-                        .style("opacity", () => {
-                            if (!highlightNationality) return 1;
-                            return nationality === highlightNationality ? 1 : 0.3;
-                        });
+                const highlightNationality = stepId === "nationalityFocus" ? topNationalities[0] : null;
+                areas.transition().duration(300).style("opacity", d => !highlightNationality || d.key === highlightNationality ? 1 : 0.3);
+                legend.selectAll("g").each(function(legendData, i) {
+                    const nationality = topNationalities[i];
+                    d3.select(this).transition().duration(300).style("opacity", () => !highlightNationality || nationality === highlightNationality ? 1 : 0.3);
                 });
             };
         }
 
-        // --- Scrollytelling Interaction ---
         function initScrollytelling() {
             const steps = d3.selectAll(".step");
-            // Ensure charts are "visible" initially or tied to the first step.
-            // This logic depends on how charts are initially displayed vs. activated by scroll.
-            // For this setup, charts are always in DOM, their content updates.
-
             const observer = new IntersectionObserver(entries => {
                 entries.forEach(entry => {
                     const stepElement = entry.target;
                     const stepId = stepElement.dataset.stepId;
                     const chartNumber = stepElement.dataset.chart;
-                    const chartSvg = d3.select(`#chart${chartNumber}`).node();
+                    const chartSvg = d3.select(\`#chart\${chartNumber}\`).node();
 
                     if (entry.isIntersecting) {
-                        // Add active class to current step
-                        steps.classed("active", false); // Remove from all
+                        steps.classed("active", false);
                         d3.select(stepElement).classed("active", true);
-
-                        // Update the corresponding chart
                         if (chartSvg && typeof chartSvg._chartUpdate === 'function') {
                             chartSvg._chartUpdate(stepId);
                         }
-
-                        // Make current chart container visible, hide others
                         d3.selectAll(".chart-container").classed("chart-active", false);
-                        d3.select(`#chart-container-${chartNumber}`).classed("chart-active", true);
-
-                    } else {
-                        // Optional: remove active class when scrolling out of view if another step isn't immediately active
-                        // d3.select(stepElement).classed("active", false);
-                        // Potentially hide the chart if no step for it is active
-                        // This might need more complex logic if multiple steps use the same chart and you want it to persist
-                        // For now, chart visibility is tied to an intersecting step.
+                        d3.select(\`#chart-container-\${chartNumber}\`).classed("chart-active", true);
                     }
                 });
-            }, { threshold: 0.5, rootMargin: "-10% 0px -50% 0px" }); // Adjust threshold and rootMargin as needed
+            }, { threshold: 0.5, rootMargin: "-10% 0px -50% 0px" });
 
-            steps.each(function() {
-                observer.observe(this);
-            });
+            steps.each(function() { observer.observe(this); });
 
-            // Initial state: Activate the first chart and its first step's state
             const firstStep = d3.select(".step");
             if (!firstStep.empty()) {
                 const firstChartNumber = firstStep.attr("data-chart");
                 const firstStepId = firstStep.attr("data-step-id");
-
-                d3.select(`#chart-container-${firstChartNumber}`).classed("chart-active", true);
+                d3.select(\`#chart-container-\${firstChartNumber}\`).classed("chart-active", true);
                 firstStep.classed("active", true);
-
-                const firstChartSvg = d3.select(`#chart${firstChartNumber}`).node();
+                const firstChartSvg = d3.select(\`#chart\${firstChartNumber}\`).node();
                 if (firstChartSvg && typeof firstChartSvg._chartUpdate === 'function') {
                     firstChartSvg._chartUpdate(firstStepId);
                 }
