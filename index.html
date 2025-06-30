@@ -4,60 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formula One History</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
-            font-family: Georgia, serif;
-            background-color: #F9F9F7;
-            color: #111;
+            font-family: 'Roboto', sans-serif;
+            background-color: #FDFDFB; /* Slightly warmer off-white */
+            color: #212529; /* Darker, more standard body text */
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
+            line-height: 1.6; /* Improved readability */
         }
 
         .container {
-            width: 600px;
-            max-width: 100%;
-            padding: 20px;
+            width: 650px; /* Slightly wider for better spacing */
+            max-width: 90%; /* Responsive margin on smaller screens */
+            padding: 30px 20px; /* Increased padding */
         }
 
         h1 {
-            font-family: 'Cheltenham', 'Times New Roman', Times, serif; /* Cheltenham fallback */
-            font-size: 3em;
-            color: #1C4E80; /* Primary color */
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 3em; /* Larger for impact */
+            color: #1C4E80;
             text-align: center;
-            margin-bottom: 0.2em;
+            margin-bottom: 0.3em;
+            letter-spacing: -0.5px; /* Subtle letter spacing */
         }
 
         .deck {
-            font-family: 'Franklin', 'Arial Narrow', Arial, sans-serif; /* Franklin fallback */
-            font-size: 1.2em;
-            color: #777; /* Grayscale */
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            font-size: 1.15em;
+            color: #495057; /* Softer, desaturated gray */
             text-align: center;
-            margin-bottom: 2em;
+            margin-bottom: 3em;
+        }
+
+        h2 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            color: #1C4E80;
+            margin-top: 0;
+            margin-bottom: 0.75em; /* Spacing for step content */
         }
 
         .step {
-            margin-bottom: 100vh; /* Ensure enough space for scrolling */
-            padding: 20px;
-            border-radius: 5px;
-            background-color: rgba(255, 255, 255, 0.8);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 70vh; /* Fine-tuned scroll space */
+            padding: 30px;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.07);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+            border-left: 4px solid transparent; /* For active state */
         }
 
         .step.active {
-            background-color: rgba(220, 220, 240, 0.9); /* Subtle highlight for active step */
+            background-color: #FFFFFF;
+            box-shadow: 0 8px 25px rgba(28, 78, 128, 0.15); /* Shadow using primary color tint */
+            transform: translateY(-2px); /* Subtle lift */
+            border-left: 4px solid #1C4E80; /* Accent for active step */
         }
 
         .chart-container {
             width: 100%;
-            height: 400px; /* Default height, can be adjusted per chart */
-            margin-bottom: 2em;
-            position: sticky;
-            top: 100px; /* Adjust as needed */
-            z-index: -1; /* Keep charts behind text */
+            height: 420px; /* Slightly taller charts */
+            margin-bottom: 2.5em;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.6s ease-in-out; /* Slower fade for charts */
+        }
+
+        .chart-container.chart-active {
+            display: block;
+            opacity: 1;
         }
 
         svg {
@@ -76,21 +99,22 @@
         }
 
         .axis text {
-            font-family: 'Franklin', 'Arial Narrow', Arial, sans-serif;
-            font-size: 0.8em;
-            fill: #777;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.75em; /* Slightly smaller for modern look */
+            fill: #555; /* Darker gray */
         }
 
         .grid line {
-            stroke: #111; /* Grid color */
-            stroke-opacity: 0.15; /* Hairline grid opacity */
+            stroke: #000; /* Grid color - changed from #111 to #000 as #111 is body text */
+            stroke-opacity: 0.1; /* Slightly more subtle */
             shape-rendering: crispEdges;
         }
 
         .chart-title {
-            font-family: 'Franklin', 'Arial Narrow', Arial, sans-serif;
-            font-size: 1.1em;
-            fill: #111;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1.0em; /* Adjusted size */
+            fill: #333;
             text-anchor: middle;
         }
 
@@ -121,6 +145,23 @@
         }
         .highlight {
             /* Define highlight style, e.g., increased stroke-width or opacity */
+        }
+
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 8px 12px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.85em;
+            background: #333; /* Dark background for tooltip */
+            color: #fff;
+            border: 0px;
+            border-radius: 6px; /* Rounded corners */
+            pointer-events: none; /* So it doesn't interfere with mouse events on chart elements */
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10; /* Ensure tooltip is on top */
         }
 
     </style>
@@ -414,6 +455,11 @@ Red Bull,2022,2023,2`;
             console.log('Size KB:',(new Blob([document.documentElement.outerHTML]).size/1024).toFixed(1));
         });
 
+        // --- Tooltip ---
+        const tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
         // --- Chart 1: Champion Age ---
         function initChampionAgeChart() {
             const data = processedData.championAgeData;
@@ -480,6 +526,34 @@ Red Bull,2022,2023,2`;
                 .attr("class", "line-champion-age data-line") // Added data-line class for potential highlighting
                 .attr("d", line)
                 .attr("aria-label", "Line showing average champion age per year");
+
+            // Circles for hover interaction
+            const hoverCircles = chartG.selectAll(".hover-circle")
+                .data(data)
+                .enter().append("circle")
+                .attr("class", "hover-circle")
+                .attr("cx", d => x(d.year))
+                .attr("cy", d => y(d.avgChampionAge))
+                .attr("r", 5) // Radius of hoverable invisible circle
+                .style("fill", "transparent") // Make them invisible
+                .style("pointer-events", "all") // Ensure they capture mouse events
+                .on("mouseover", function(event, d) {
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    tooltip.html(`<strong>Year:</strong> ${d.year}<br/><strong>Avg Age:</strong> ${d.avgChampionAge.toFixed(1)}`)
+                        .style("left", (event.pageX + 15) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+
+                    // Highlight the actual data point or line segment
+                    d3.select(this).attr("r", 7).style("fill", "#D55E00"); // Show circle on hover
+                    mainLine.style("stroke-width", "3px");
+                })
+                .on("mouseout", function(d) {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                    d3.select(this).attr("r", 5).style("fill", "transparent"); // Hide circle
+                    mainLine.style("stroke-width", "2px");
+                });
+
+            const mainLine = chartG.select(".line-champion-age"); // Reference to the main line for hover effect
 
 
             // Regression Line Calculation
@@ -636,7 +710,21 @@ Red Bull,2022,2023,2`;
                 .attr("width", d => x(d.endYear + 1) - x(d.startYear)) // +1 to include end year fully
                 .attr("height", y.bandwidth())
                 .attr("fill", d => teamColors[d.team] || "#777")
-                .attr("aria-label", d => `${d.team} championship streak from ${d.startYear} to ${d.endYear}, ${d.length} years.`);
+                .attr("aria-label", d => `${d.team} championship streak from ${d.startYear} to ${d.endYear}, ${d.length} years.`)
+                .on("mouseover", function(event, d) {
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    tooltip.html(`<strong>Team:</strong> ${d.team}<br/>
+                                  <strong>Streak:</strong> ${d.startYear} - ${d.endYear}<br/>
+                                  <strong>Length:</strong> ${d.length} year(s)`)
+                        .style("left", (event.pageX + 15) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                    d3.select(this).style("opacity", 0.7);
+                })
+                .on("mouseout", function(d) {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                    d3.select(this).style("opacity", 1);
+                });
+
 
             // Direct labels on bars (streak length)
             chartG.selectAll(".bar-label")
@@ -761,7 +849,26 @@ Red Bull,2022,2023,2`;
                 .attr("class", d => `area-nationality nationality-${d.key.replace(/\s+/g, '-').toLowerCase()}`)
                 .attr("d", area)
                 .style("fill", d => color(d.key))
-                .attr("aria-label", d => `Area showing wins for ${d.key} drivers per decade.`);
+                .attr("aria-label", d => `Area showing wins for ${d.key} drivers per decade.`)
+                .on("mouseover", function(event, d_series) { // d_series is the whole series for a nationality
+                    const key = d_series.key;
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    // Tooltip content might be tricky here as we hover an area, not a point.
+                    // For simplicity, show nationality. More complex would find closest point.
+                    tooltip.html(`<strong>Nationality:</strong> ${key}`)
+                        .style("left", (event.pageX + 15) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+
+                    areas.style("opacity", other_d => other_d.key === key ? 1 : 0.3);
+                    // Highlight corresponding legend item
+                    legend.selectAll("g").style("opacity", leg_d => leg_d === key ? 1 : 0.5);
+
+                })
+                .on("mouseout", function(d) {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                    areas.style("opacity", 1);
+                    legend.selectAll("g").style("opacity", 1);
+                });
 
             // Legend
             const legend = chartG.append("g")
@@ -770,7 +877,23 @@ Red Bull,2022,2023,2`;
 
             topNationalities.forEach((nationality, i) => {
                 const legendRow = legend.append("g")
-                    .attr("transform", `translate(0, ${i * 20})`);
+                    .datum(nationality) // Bind nationality name to the legend group
+                    .attr("transform", `translate(0, ${i * 20})`)
+                    .style("cursor", "default") // Indicate interactivity
+                    .on("mouseover", function(event, d_nationality) {
+                        tooltip.transition().duration(200).style("opacity", .9);
+                        tooltip.html(`<strong>Nationality:</strong> ${d_nationality}`)
+                           .style("left", (event.pageX + 15) + "px")
+                           .style("top", (event.pageY - 28) + "px");
+                        areas.style("opacity", area_d => area_d.key === d_nationality ? 1 : 0.3);
+                        legend.selectAll("g").style("opacity", leg_d => leg_d === d_nationality ? 1 : 0.5);
+                    })
+                    .on("mouseout", function(d) {
+                        tooltip.transition().duration(500).style("opacity", 0);
+                        areas.style("opacity", 1);
+                        legend.selectAll("g").style("opacity", 1);
+                    });
+
 
                 legendRow.append("rect")
                     .attr("width", 10)
@@ -840,14 +963,16 @@ Red Bull,2022,2023,2`;
                             chartSvg._chartUpdate(stepId);
                         }
 
-                        // Make current chart container visible, hide others (optional, if charts are absolutely positioned)
-                        // d3.selectAll(".chart-container").style("display", "none");
-                        // d3.select(`#chart-container-${chartNumber}`).style("display", "block");
-
+                        // Make current chart container visible, hide others
+                        d3.selectAll(".chart-container").classed("chart-active", false);
+                        d3.select(`#chart-container-${chartNumber}`).classed("chart-active", true);
 
                     } else {
                         // Optional: remove active class when scrolling out of view if another step isn't immediately active
                         // d3.select(stepElement).classed("active", false);
+                        // Potentially hide the chart if no step for it is active
+                        // This might need more complex logic if multiple steps use the same chart and you want it to persist
+                        // For now, chart visibility is tied to an intersecting step.
                     }
                 });
             }, { threshold: 0.5, rootMargin: "-10% 0px -50% 0px" }); // Adjust threshold and rootMargin as needed
@@ -856,16 +981,20 @@ Red Bull,2022,2023,2`;
                 observer.observe(this);
             });
 
-            // Trigger update for the first step of the first chart manually if needed on load
-            // This ensures the first chart state is correctly set before any scrolling.
-             const firstStepOfChart1 = d3.select('.step[data-chart="1"]');
-             if (!firstStepOfChart1.empty()) {
-                 const firstStepId = firstStepOfChart1.attr('data-step-id');
-                 const chart1Svg = d3.select("#chart1").node();
-                 if (chart1Svg && typeof chart1Svg._chartUpdate === 'function') {
-                     // chart1Svg._chartUpdate(firstStepId); // Initial state, can be too aggressive
-                 }
-             }
+            // Initial state: Activate the first chart and its first step's state
+            const firstStep = d3.select(".step");
+            if (!firstStep.empty()) {
+                const firstChartNumber = firstStep.attr("data-chart");
+                const firstStepId = firstStep.attr("data-step-id");
+
+                d3.select(`#chart-container-${firstChartNumber}`).classed("chart-active", true);
+                firstStep.classed("active", true);
+
+                const firstChartSvg = d3.select(`#chart${firstChartNumber}`).node();
+                if (firstChartSvg && typeof firstChartSvg._chartUpdate === 'function') {
+                    firstChartSvg._chartUpdate(firstStepId);
+                }
+            }
         }
     </script>
 </body>
